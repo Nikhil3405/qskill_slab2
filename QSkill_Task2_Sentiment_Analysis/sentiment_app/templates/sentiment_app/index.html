@@ -1,0 +1,113 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentiment Analyzer | QSkill</title>
+    <link rel="stylesheet" href="{% static 'sentiment_app/style.css' %}">
+</head>
+<body>
+    <main class="shell">
+        <nav class="topbar">
+            <div class="brand"><span class="brand-icon">S</span> Sentiment Studio</div>
+            <span class="tag">PYTHON · DJANGO · TEXTBLOB</span>
+        </nav>
+
+        <section class="hero">
+            <div class="eyebrow">TEXT ANALYSIS TOOL</div>
+            <h1>Understand the feeling<br><span>behind the words.</span></h1>
+            <p>Enter a sentence, review its sentiment, and explore its polarity and subjectivity scores.</p>
+        </section>
+
+        <section class="workspace">
+            <div class="panel input-panel">
+                <div class="panel-heading">
+                    <div>
+                        <div class="eyebrow">YOUR TEXT</div>
+                        <h2>Analyze a message</h2>
+                    </div>
+                    <span class="step">01 / INPUT</span>
+                </div>
+                <form method="post">
+                    {% csrf_token %}
+                    <label for="text">Text to analyze</label>
+                    <textarea id="text" name="text" maxlength="2000" placeholder="For example: I really enjoyed using this product. The experience was excellent!" required>{{ text }}</textarea>
+                    <div class="form-foot">
+                        <span>Up to 2,000 characters</span>
+                        <span id="counter">0 / 2000</span>
+                    </div>
+                    {% if error %}<div class="error">{{ error }}</div>{% endif %}
+                    <button type="submit">Analyze sentiment <span>→</span></button>
+                </form>
+                <div class="examples">
+                    <span class="example-label">TRY AN EXAMPLE</span>
+                    <button type="button" class="sample" data-text="I absolutely love this application. It is simple and wonderful!">Positive</button>
+                    <button type="button" class="sample" data-text="I am disappointed. The service was slow and the experience was terrible.">Negative</button>
+                    <button type="button" class="sample" data-text="The package arrived this morning.">Neutral</button>
+                </div>
+            </div>
+
+            <div class="panel result-panel">
+                <div class="panel-heading">
+                    <div>
+                        <div class="eyebrow">ANALYSIS RESULT</div>
+                        <h2>Your result</h2>
+                    </div>
+                    <span class="step">02 / INSIGHT</span>
+                </div>
+                {% if result %}
+                    <div class="result-state {{ result.label|lower }}">
+                        <div class="result-icon">
+                            {% if result.label == "Positive" %}↗{% elif result.label == "Negative" %}↘{% else %}→{% endif %}
+                        </div>
+                        <div>
+                            <div class="result-caption">DETECTED SENTIMENT</div>
+                            <div class="result-label">{{ result.label }}</div>
+                        </div>
+                    </div>
+                    <div class="score-block">
+                        <div class="score-title"><span>Polarity</span><strong>{{ result.polarity|floatformat:3 }}</strong></div>
+                        <div class="meter"><div class="meter-fill polarity-fill" style="width:{% widthratio result.polarity|add:1 2 100 %}%"></div></div>
+                        <div class="scale"><span>-1 · Negative</span><span>0 · Neutral</span><span>+1 · Positive</span></div>
+                    </div>
+                    <div class="score-block">
+                        <div class="score-title"><span>Subjectivity</span><strong>{{ result.subjectivity|floatformat:3 }}</strong></div>
+                        <div class="meter"><div class="meter-fill subjectivity-fill" style="width:{% widthratio result.subjectivity 1 100 %}%"></div></div>
+                        <div class="scale"><span>0 · Factual</span><span>1 · Opinion-based</span></div>
+                    </div>
+                    <div class="explanation">
+                        <strong>How to read this</strong>
+                        <p>Polarity ranges from -1 (negative) to +1 (positive). Subjectivity ranges from 0 (more objective) to 1 (more subjective).</p>
+                    </div>
+                {% else %}
+                    <div class="empty-result">
+                        <div class="empty-art">✳</div>
+                        <h3>Your analysis will appear here</h3>
+                        <p>Enter text on the left and select “Analyze sentiment” to see the classification and scores.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <footer>
+            <span>Built with Django and TextBlob</span>
+            <span>Educational sentiment analysis · Results may not capture context or sarcasm</span>
+        </footer>
+    </main>
+    <script>
+        const textarea = document.getElementById("text");
+        const counter = document.getElementById("counter");
+        function updateCount() { counter.textContent = `${textarea.value.length} / 2000`; }
+        textarea.addEventListener("input", updateCount);
+        updateCount();
+        document.querySelectorAll(".sample").forEach(button => {
+            button.addEventListener("click", () => {
+                textarea.value = button.dataset.text;
+                updateCount();
+                textarea.focus();
+            });
+        });
+    </script>
+</body>
+</html>
